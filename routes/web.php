@@ -62,3 +62,9 @@ Route::middleware(['auth', 'admin'])->post('/order/update/{id}',
 [OrderController::class, 'update']);
 Route::middleware(['auth', 'admin'])->post('/order/destroy/{id}',
 [OrderController::class, 'destroy']);
+Route::post('/order/addItem', [OrderController::class, 'addItem'])->name('order.addItem');
+Route::post('/order/removeItem', [OrderController::class, 'removeItem'])->name('order.removeItem');
+Route::post('/order/increaseItem', [OrderController::class, 'increaseItem'])->name('order.increaseItem');
+Route::post('/order/decreaseItem', [OrderController::class, 'decreaseItem'])->name('order.decreaseItem');
+Route::get('/order/search', [OrderController::class, 'search'])->name('order.search');
+

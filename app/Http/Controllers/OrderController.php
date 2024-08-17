@@ -17,19 +17,26 @@ class OrderController extends Controller
     {
         $orders = Order::paginate(10);
         $produks = Produk::all();
-        return view('order.index', ['orders' => $orders, 'produks' => $produks]);
+        
+        $total = 0;
+        foreach (session('cart', []) as $item) {
+            $total += $item['hargaProduk'] * ($item['jumlah'] ?? 1); 
+        }
+        
+        return view('order.orderIndex', [
+            'orders' => $orders,
+            'produks' => $produks,
+            'total' => $total
+        ]);
     }
+    
+    
 
     /**
      * Show the form for creating a new resource.
      *
      * @return \Illuminate\Http\Response
      */
-    public function create()
-    {
-        $produks = Produk::all();
-        return view('order.create', ['produks' => $produks]);
-    }
 
     /**
      * Store a newly created resource in storage.
@@ -39,27 +46,29 @@ class OrderController extends Controller
      */
     public function store(Request $request)
     {
-         $request->validate([
-        'namaPembeli' => 'required|string|max:255',
-        'jenisOrder' => 'required|string|max:255',
-        'produk_id' => 'required|exists:produks,id',
-        'jumlahProduk' => 'required|integer|min:1',
-    ]);
-
-        $produk = Produk::findOrFail($request->produk_id);
-        
-        $order = new Order();
-        $order->namaPembeli = $request->namaPembeli;
-        $order->jenisOrder = $request->jenisOrder;
-        $order->namaProduk = $produk->namaProduk;
-        $order->hargaProduk = $produk->hargaProduk;
-        $order->kategoriProduk = $produk->kategoriProduk;
-        $order->jumlahProduk = $request->jumlahProduk;
-        $order->totalHarga = $produk->hargaProduk * $request->jumlahProduk;
-        
-        $order->save();
-        
-        return redirect('/order');
+        $request->validate([
+            'namaPembeli' => 'required|string|max:255',
+            'jenisOrder' => 'required|string|max:255',
+            'cart' => 'required|json',
+        ]);
+    
+        $cart = json_decode($request->cart, true);
+    
+        foreach ($cart as $id => $item) {
+            $order = new Order();
+            $order->namaPembeli = $request->namaPembeli;
+            $order->jenisOrder = $request->jenisOrder;
+            $order->namaProduk = $item['namaProduk'];
+            $order->hargaProduk = $item['hargaProduk'];
+            $order->kategoriProduk = $item['kategoriProduk'];
+            $order->jumlahProduk = 1;
+            $order->totalHarga = $item['hargaProduk'];
+            $order->save();
+        }
+    
+        session()->forget('cart');
+    
+        return redirect('/order')->with('success', 'Pesanan berhasil diproses.');
     }
 
     /**
@@ -68,11 +77,6 @@ class OrderController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
-    {
-        $order = Order::find($id);
-        return view('order.show', compact('order'));
-    }
 
     /**
      * Show the form for editing the specified resource.
@@ -80,12 +84,6 @@ class OrderController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
-    {
-        $order = Order::find($id);
-        $produks = Produk::all();
-        return view('order.edit', ['order' => $order, 'produks' => $produks]);
-    }
 
     /**
      * Update the specified resource in storage.
@@ -131,4 +129,107 @@ class OrderController extends Controller
         $order->delete();
         return redirect('/order');
     }
+
+
+    public function addItem(Request $request)
+    {
+        $request->validate([
+            'produk_id' => 'required|exists:produks,id',
+        ]);
+    
+        $produk = Produk::findOrFail($request->produk_id);
+    
+        $cart = session()->get('cart', []);
+        if (isset($cart[$produk->id])) {
+            $cart[$produk->id]['jumlah'] += 1;
+        } else {
+            $cart[$produk->id] = [
+                'namaProduk' => $produk->namaProduk,
+                'hargaProduk' => $produk->hargaProduk,
+                'kategoriProduk' => $produk->kategoriProduk,
+                'deskripsiProduk' => $produk->deskripsiProduk,
+                'jumlah' => 1, 
+            ];
+        }
+    
+        session()->put('cart', $cart);
+    
+        return redirect()->back()->with('success', 'Produk berhasil ditambahkan ke pesanan.');
+    }
+    
+    public function removeItem(Request $request)
+    {
+        $request->validate([
+            'produk_id' => 'required|exists:produks,id',
+        ]);
+    
+        $cart = session()->get('cart', []);
+    
+        if (isset($cart[$request->produk_id])) {
+            unset($cart[$request->produk_id]);
+            session()->put('cart', $cart);
+        }
+    
+        return redirect()->back()->with('success', 'Produk berhasil dihapus dari pesanan.');
+    }
+
+
+   public function increaseItem(Request $request)
+    {
+        $request->validate([
+            'produk_id' => 'required|exists:produks,id',
+        ]);
+
+        $cart = session()->get('cart', []);
+
+        if (isset($cart[$request->produk_id])) {
+            $cart[$request->produk_id]['jumlah'] = $cart[$request->produk_id]['jumlah'] ?? 1;
+            $cart[$request->produk_id]['jumlah'] += 1;
+        }
+
+        session()->put('cart', $cart);
+        return redirect()->back()->with('success', 'Jumlah item ditambah.');
+    }
+
+    public function decreaseItem(Request $request)
+    {
+        $request->validate([
+            'produk_id' => 'required|exists:produks,id',
+        ]);
+
+        $cart = session()->get('cart', []);
+
+        if (isset($cart[$request->produk_id])) {
+            $cart[$request->produk_id]['jumlah'] = $cart[$request->produk_id]['jumlah'] ?? 1;
+            if ($cart[$request->produk_id]['jumlah'] > 1) {
+                $cart[$request->produk_id]['jumlah'] -= 1;
+            }
+        }
+
+        session()->put('cart', $cart);
+        return redirect()->back()->with('success', 'Jumlah item dikurangi.');
+    }
+
+    public function search(Request $request)
+    {
+        $search = $request->get('search');
+        $produks = Produk::where('namaProduk', 'like', "%$search%")->get();
+        $cart = session('cart', []);
+    
+        $total = 0;
+        foreach ($cart as $item) {
+            $total += $item['hargaProduk'] * ($item['jumlah'] ?? 1); 
+        }
+    
+        $orders = Order::paginate(10);
+        return view('order.orderIndex', [
+            'produks' => $produks,
+            'total' => $total,
+            'orders' => $orders 
+        ]);
+    }
+    
+    
+
+    
 }

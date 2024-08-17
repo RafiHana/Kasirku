@@ -29,6 +29,7 @@
                     <option value="Paket" {{ old('kategoriProduk') == 'Paket' ? 'selected' : '' }}>Paket</option>
                     <option value="Minuman" {{ old('kategoriProduk') == 'Minuman' ? 'selected' : '' }}>Minuman</option>
                     <option value="Makanan" {{ old('kategoriProduk') == 'Makanan' ? 'selected' : '' }}>Makanan</option>
+                    <option value="-" {{ old('deskripsiProduk') == '-' ? 'selected' : '' }}>-</option>
                 </select>
             </div>
         </div>
@@ -42,6 +43,7 @@
                     <option value="Nasi/Lauk" {{ old('deskripsiProduk') == 'Nasi/Lauk' ? 'selected' : '' }}>Nasi/Lauk</option>
                     <option value="Lauk" {{ old('deskripsiProduk') == 'Lauk' ? 'selected' : '' }}>Lauk</option>
                     <option value="Minuman" {{ old('deskripsiProduk') == 'Minuman' ? 'selected' : '' }}>Minuman</option>
+                    <option value="-" {{ old('deskripsiProduk') == '-' ? 'selected' : '' }}>-</option>
                 </select>
             </div>
         </div>
