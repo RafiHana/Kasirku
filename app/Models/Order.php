@@ -5,17 +5,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Produk extends Model
+class Order extends Model
 {
     use HasFactory;
-    protected $table = 'produks';
+    protected $table = 'orders';
     public $timestamps = true;
     protected $fillable = [
+        'namaPembeli',
+        'jenisOrder',
         'namaProduk',
         'hargaProduk',
         'kategoriProduk',
-        'deskripsiProduk',
+        'jumlahProduk',
+        'totalHarga',
     ];
-
-    
 }
