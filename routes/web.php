@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\userController;
 use App\Http\Controllers\ProdukController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\TransaksiController;
 
 
 /*
@@ -67,4 +68,8 @@ Route::post('/order/removeItem', [OrderController::class, 'removeItem'])->name('
 Route::post('/order/increaseItem', [OrderController::class, 'increaseItem'])->name('order.increaseItem');
 Route::post('/order/decreaseItem', [OrderController::class, 'decreaseItem'])->name('order.decreaseItem');
 Route::get('/order/search', [OrderController::class, 'search'])->name('order.search');
+Route::post('/order/process-transaction', [OrderController::class, 'processTransaction'])->name('order.processTransaction');
 
+Route::middleware(['auth', 'admin'])->get('/transaksi',
+[TransaksiController::class, 'index']);
+Route::get('/transaksi', [TransaksiController::class, 'index'])->name('transaksi.index');

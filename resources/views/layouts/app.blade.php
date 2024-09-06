@@ -38,7 +38,7 @@
                             <a class="nav-link" href="{{ url('/order') }}">{{ __('Order') }}</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url('/') }}">{{ __('Transaksi') }}</a>
+                            <a class="nav-link" href="{{ url('/transaksi') }}">{{ __('Transaksi') }}</a>
                         </li>
                     @endif
                     </ul>

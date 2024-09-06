@@ -5,36 +5,32 @@
     <h1>{{ __('Order') }}</h1>
     <div class="row">
         <div class="col-md-15">
-
             <form action="{{ url('/order/store') }}" method="POST" class="mb-4">
                 @csrf
                 <div class="row">
                     <div class="col-md-4 mb-3">
                         <label for="namaPembeli" class="form-label">Nama Pembeli</label>
-                        <input type="text" class="form-control" id="namaPembeli" name="namaPembeli" required>
+                        <input type="text" class="form-control" id="namaPembeli" name="namaPembeli" value="{{ old('namaPembeli', $order_form['namaPembeli'] ?? '') }}" required>
                     </div>
                     <div class="col-md-2 mb-3">
                         <label for="jenisOrder" class="form-label">Jenis Order</label>
                         <select class="form-select" id="jenisOrder" name="jenisOrder" required>
                             <option value="">Pilih Jenis Order</option>
-                            <option value="Dine In">Dine In</option>
-                            <option value="Take Away">Take Away</option>
-                            <option value="Delivery">Delivery</option>
+                            <option value="Dine In" {{ old('jenisOrder', $order_form['jenisOrder'] ?? '') == 'Dine In' ? 'selected' : '' }}>Dine In</option>
+                            <option value="Take Away" {{ old('jenisOrder', $order_form['jenisOrder'] ?? '') == 'Take Away' ? 'selected' : '' }}>Take Away</option>
+                            <option value="Delivery" {{ old('jenisOrder', $order_form['jenisOrder'] ?? '') == 'Delivery' ? 'selected' : '' }}>Delivery</option>
                         </select>
                     </div>
                     <div class="col-md-3">
                         <label for="totalPembayaran" class="form-label">Total Pembayaran</label>
                         <input type="text" class="form-control" id="totalPembayaran" name="totalPembayaran" value="Rp {{ number_format($total, 0, ',', '.') }}" required readonly>
                     </div>
-                    <div class="col-md-1">
-                        <label for="mejaNomor" class="form-label">No. Meja</label>
-                        <input type="text" class="form-control" id="mejaNomor" name="mejaNomor" required>
-                    </div>
-                    <div class="col-md-2 mb-" style="text-align: right; position: relative; top: 30px;">
-                        <input type="hidden" name="cart" value="{{ json_encode(session('cart')) }}">
-                        <button type="submit" class="btn btn-danger">Proses Transaksi</button>
-                    </div>
-                    
+                    <div class="col-md-3 mb-" style="text-align: right; position: relative; top: 30px;">
+                        <form action="{{ route('order.processTransaction') }}" method="POST">
+                            @csrf
+                            <button type="submit" class="btn btn-danger">Proses Transaksi</button>
+                        </form>
+                    </div>      
                 </div>
             </form>
 
@@ -43,7 +39,7 @@
                 <table class="table table-striped table-sm">
                         <thead>
                             <tr>
-                                <th>#</th>
+                                <th>No</th>
                                 <th>Menu</th>
                                 <th>Harga</th>
                                 <th>Kategori</th>

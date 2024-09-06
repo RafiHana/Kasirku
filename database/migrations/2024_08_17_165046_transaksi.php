@@ -6,24 +6,24 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-
     public function up()
     {
-        Schema::create('orders', function (Blueprint $table) {
+        Schema::create('transaksis', function (Blueprint $table) {
             $table->id();
-            $table->timestamps();
             $table->string('namaPembeli');
             $table->string('jenisOrder');
             $table->string('namaProduk');
-            $table->string('hargaProduk');
+            $table->integer('hargaProduk');
             $table->string('kategoriProduk');
-            $table->string('jumlahProduk');
-            $table->string('totalHarga');
-            });
-    }
+            $table->integer('jumlahProduk');
+            $table->integer('totalHarga');
+            $table->timestamps();
+        });
+    }    
 
     public function down()
     {
-        Schema::dropIfExists('orders');
+        Schema::dropIfExists('transaksis');
     }
 };
+

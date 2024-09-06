@@ -6,92 +6,43 @@ use App\Models\Order;
 use App\Models\Produk;
 use Illuminate\Http\Request;
 
-class OrderController extends Controller
-{
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
+class OrderController extends Controller {
+
     public function index()
     {
         $orders = Order::paginate(10);
         $produks = Produk::all();
-        
+    
         $total = 0;
         foreach (session('cart', []) as $item) {
             $total += $item['hargaProduk'] * ($item['jumlah'] ?? 1); 
         }
-        
+    
+        $orderForm = session('order_form', []);
         return view('order.orderIndex', [
             'orders' => $orders,
             'produks' => $produks,
-            'total' => $total
+            'total' => $total,
+            'order_form' => $orderForm
         ]);
     }
-    
-    
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
     public function store(Request $request)
     {
         $request->validate([
             'namaPembeli' => 'required|string|max:255',
             'jenisOrder' => 'required|string|max:255',
-            'cart' => 'required|json',
         ]);
     
-        $cart = json_decode($request->cart, true);
-    
-        foreach ($cart as $id => $item) {
-            $order = new Order();
-            $order->namaPembeli = $request->namaPembeli;
-            $order->jenisOrder = $request->jenisOrder;
-            $order->namaProduk = $item['namaProduk'];
-            $order->hargaProduk = $item['hargaProduk'];
-            $order->kategoriProduk = $item['kategoriProduk'];
-            $order->jumlahProduk = 1;
-            $order->totalHarga = $item['hargaProduk'];
-            $order->save();
-        }
+        session()->put('order_form', [
+            'namaPembeli' => $request->namaPembeli,
+            'jenisOrder' => $request->jenisOrder,
+        ]);
     
         session()->forget('cart');
-    
         return redirect('/order')->with('success', 'Pesanan berhasil diproses.');
     }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
+    
     public function update(Request $request, $id)
     {
         $request->validate([
@@ -117,19 +68,12 @@ class OrderController extends Controller
         return redirect('/order');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function destroy($id)
     {
         $order = Order::find($id);
         $order->delete();
         return redirect('/order');
     }
-
 
     public function addItem(Request $request)
     {
@@ -153,7 +97,6 @@ class OrderController extends Controller
         }
     
         session()->put('cart', $cart);
-    
         return redirect()->back()->with('success', 'Produk berhasil ditambahkan ke pesanan.');
     }
     
@@ -172,7 +115,6 @@ class OrderController extends Controller
     
         return redirect()->back()->with('success', 'Produk berhasil dihapus dari pesanan.');
     }
-
 
    public function increaseItem(Request $request)
     {
@@ -228,8 +170,38 @@ class OrderController extends Controller
             'orders' => $orders 
         ]);
     }
+
+    public function processTransaction(Request $request)
+    {
+        $request->validate([
+            'namaPembeli' => 'required|string|max:255',
+            'jenisOrder' => 'required|string|max:255',
+        ]);
     
+        $cart = session('cart', []);
+        
+        if (empty($cart)) {
+            return redirect('/order')->with('error', 'Keranjang kosong. Silakan tambahkan item terlebih dahulu.');
+        }
     
+        foreach ($cart as $id => $item) {
+            $order = new Order([
+                'namaPembeli' => $request->namaPembeli,
+                'jenisOrder' => $request->jenisOrder,
+                'namaProduk' => $item['namaProduk'],
+                'hargaProduk' => $item['hargaProduk'],
+                'kategoriProduk' => $item['kategoriProduk'],
+                'jumlahProduk' => $item['jumlah'] ?? 1,
+                'totalHarga' => $item['hargaProduk'] * ($item['jumlah'] ?? 1),
+            ]);
+    
+            $order->save();
+        }
+    
+        session()->forget(['cart', 'order_form']);
+        return redirect('/order')->with('success', 'Transaksi berhasil diproses dan disimpan.');
+    }
 
     
+       
 }
